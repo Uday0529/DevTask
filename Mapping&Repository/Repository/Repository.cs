@@ -1,5 +1,6 @@
 ﻿using DevTask2.DataAdapters.DBContext;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace DevTask2.Mapping_Repository.Repository
 {
@@ -7,16 +8,23 @@ namespace DevTask2.Mapping_Repository.Repository
     {
         private readonly ApplicationDBContext _context = context;
 
-       public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
+       public async Task<IEnumerable<T>> GetAllAsync(string property, string id,CancellationToken cancellationToken)
        {
-            return await _context.Set<T>().ToListAsync(cancellationToken);
+            return await _context.Set<T>().Where(t => EF.Property<int>(t, property) == Int32.Parse(id)).ToListAsync(cancellationToken);
        }
 
-       public async Task<T> GetById(string id, CancellationToken cancellationToken)
+       public async Task<T> GetById(string id,string secondId, CancellationToken cancellationToken)
        {
-            return await _context.Set<T>().FindAsync(Int32.Parse(id), cancellationToken) ?? 
-                throw new KeyNotFoundException(nameof(id));
-       }
+            var result = await _context.Set<T>().Where(t => EF.Property<int>(t, "Id") == Int32.Parse(id) && 
+            EF.Property<int>(t,"UserId") == Int32.Parse(secondId)).FirstOrDefaultAsync(cancellationToken);
+
+            return result ?? throw new KeyNotFoundException($"Task with ID {id} not found for this user.");
+        }
+        public async Task<T> GetValueByTwoProperty(string ptyFir, int valueF, string ptySec, string valueS, CancellationToken cancellationToken)
+        {
+            var result =  await _context.Set<T>().Where(t => EF.Property<int>(t, ptyFir) == valueF && EF.Property<string>(t, ptySec) == valueS).FirstOrDefaultAsync(cancellationToken);
+            return result ?? throw new KeyNotFoundException($"Task not found of this {ptyFir}");
+        }
 
        public async Task<T> AddAsync(T entity, CancellationToken cancellationToken)
        {
