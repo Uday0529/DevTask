@@ -32,38 +32,39 @@ namespace DevTask2.Business
             return id == null ? throw new ArgumentNullException(nameof(id)) : _adapter.DeleteEntity(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<ViewTaskModel>> GetAllTasks(CancellationToken cancellationToken)
+        public async Task<IEnumerable<ViewTaskModel>> GetAllTasks(string userId, CancellationToken cancellationToken)
         {
-            var tblTask = await _adapter.GetAllAsync(cancellationToken);
+            string property = "UserId";
+            var tblTask = await _adapter.GetAllAsync(property, userId, cancellationToken);
             var mapTask = _mapper.Map<IEnumerable<ViewTaskModel>>(tblTask);
             return mapTask;
         }
 
-        public async Task<ViewTaskModel> GetTaskById(string? taskId, CancellationToken cancellationToken)
+        public async Task<ViewTaskModel> GetTaskById(string? taskId, string userId, CancellationToken cancellationToken)
         {
-            var tblTask = taskId == null ? throw new ArgumentNullException(nameof(taskId)) : await _adapter.GetById(taskId, cancellationToken);
+            var tblTask = taskId == null ? throw new ArgumentNullException(nameof(taskId)) : await _adapter.GetById(taskId, userId, cancellationToken);
             var mapTask = _mapper.Map<ViewTaskModel>(tblTask);
             return mapTask;
         }
-        public async Task<bool> UpdateTask(string id, Update_TaskModel task, CancellationToken cancellationToken)
+        public async Task<bool> UpdateTask(string id, string userId, Update_TaskModel task, CancellationToken cancellationToken)
         {
-            if (id != task.Id) throw new InvalidCastException (nameof(id));
+            if (id != task.Id) throw new InvalidCastException(nameof(id));
 
-            var getTask = await _adapter.GetById(id, cancellationToken);
+            var getTask = await _adapter.GetById(id, userId, cancellationToken);
             var mapTask = _mapper.Map(task, getTask);
-            mapTask.CompletedAt = mapTask.IsCompleted == true ?  DateTime.UtcNow : null;
+            mapTask.CompletedAt = mapTask.IsCompleted == true ? DateTime.UtcNow : null;
             return await _adapter.UpdateAsync(mapTask, cancellationToken);
         }
 
 
-        public async Task<ViewTaskModel> GetTaskByTitle(string title, CancellationToken cancellationToken)
+        public async Task<ViewTaskModel> GetTaskByTitle(string userId, string title, CancellationToken cancellationToken)
         {
-            var tbltasks = await _adapter.GetAllAsync(cancellationToken);
-            var findTask = tbltasks.FirstOrDefault(t => t.Title == title)?? throw new KeyNotFoundException (nameof(title));
-            var mapView = _mapper.Map<ViewTaskModel>(findTask);
-            return mapView;
+
+            var result = await _adapter.GetValueByTwoProperty("UserId", Int32.Parse(userId), "Title", title, cancellationToken);
+            var mapResult = _mapper.Map<ViewTaskModel>(result);
+            return mapResult;
         }
 
-       
+
     }
 }
