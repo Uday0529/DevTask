@@ -13,12 +13,12 @@ namespace DevTask2.Business
         private readonly IMapper _mapper;
         public UserService(IMapper mapper, IUserDataAdapter dataAdapter) { _mapper = mapper; _userDataAdapter = dataAdapter; }
 
-        public async Task<ViewUserModel> AddUserAsync(Add_UserModel user, CancellationToken cancellationToken)
+        public async Task<ViewUserModel> AddUserAsync(UserModel user, CancellationToken cancellationToken)
         {
             var mapUser = _mapper.Map<TblUser>(user);
             var tblUser = await _userDataAdapter.AddAsync(mapUser, cancellationToken);
             return _mapper.Map<ViewUserModel>(tblUser);
-           
+
         }
 
         public async Task<bool> DeleteUserAsync(string v, string value, CancellationToken cancellationToken)
@@ -34,21 +34,31 @@ namespace DevTask2.Business
             return mapUser;
         }
 
-        public async Task<ViewUserModel> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<ViewUserModel?> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(userId);
             string property = "Id";
             var tblUser = await _userDataAdapter.GetUserByProperty(property, userId, cancellationToken);
-            return _mapper.Map<ViewUserModel>(tblUser);
+            var user = _mapper.Map<ViewUserModel?>(tblUser);
+            if (user == null)
+            {
+                return null;
+            }
+            return user;
 
         }
 
-        public async Task<ViewUserModel> GetUserByUsername(string username, CancellationToken cancellationToken)
+        public async Task<ViewUserModel?> GetUserByUsername(string username, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(username);
             string property = "username";
             var tblUser = await _userDataAdapter.GetUserByProperty(property, username, cancellationToken);
-            return _mapper.Map<ViewUserModel>(tblUser);
+            var user = _mapper.Map<ViewUserModel?>(tblUser);
+            if (user == null)
+            {
+                return null;
+            }
+            return user;
         }
     }
 }

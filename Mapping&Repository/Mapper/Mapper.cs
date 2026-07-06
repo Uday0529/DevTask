@@ -12,7 +12,6 @@ namespace DevTask2.Mapping_Repository.Mapper
         {
             //Adding task
             CreateMap<Add_TaskModel, TblTask>()
-                .ForMember(d => d.UserId, s => s.MapFrom(src => src.UserId))
                 .ForMember(d => d.Title, s => s.MapFrom(src => src.Title))
                 .ForMember(d => d.Description, s => s.MapFrom(src => src.Description))
                 .ReverseMap();
@@ -43,12 +42,22 @@ namespace DevTask2.Mapping_Repository.Mapper
             CreateMap<TblUser, ViewUserModel>()
                 .ForMember(d => d.UserId, s => s.MapFrom(s => s.Id))
                 .ForMember(d => d.UserName, s => s.MapFrom(s => s.username))
-                .ForMember(d => d.Password, s => s.MapFrom(s => s.password)).ReverseMap();
+                .ForMember(d => d.Password, s => s.MapFrom(s => s.password))
+                .ForMember(d => d.Role, s => s.MapFrom(s => s.Role))
+                .ForMember(d => d.Tasks, s => s.MapFrom(s => s.Tasks)).ReverseMap();
 
-            CreateMap<TblUser, Add_UserModel>()
+            CreateMap<TblUser, UserAuthModel>()
                 .ForMember(d => d.Username, s => s.MapFrom(s => s.username))
                 .ForMember(d => d.Password, s => s.MapFrom(s => s.password)).ReverseMap();
-        }
 
+            CreateMap<UserAuthModel, UserModel>()
+                .ForMember(d => d.Username, s => s.MapFrom(s => s.Username))
+                .ForMember(d => d.Password, s => s.MapFrom(s => s.Password)).ReverseMap();
+
+            CreateMap<UserModel, TblUser>()
+                .ForMember(d => d.username, s => s.MapFrom(s => s.Username))
+                .ForMember(d => d.password, s => s.MapFrom(s => s.Password))
+                .ForMember(d => d.Role, s => s.MapFrom(s => s.Role)).ReverseMap();
+        }
     }
 }

@@ -18,10 +18,11 @@ namespace DevTask2.Business
             _mapper = mapper;
         }
 
-        public async Task<ViewTaskModel> AddTask(Add_TaskModel task, CancellationToken cancellationToken)
+        public async Task<ViewTaskModel> AddTask(string userId, Add_TaskModel task, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(task);
             var mapTask = _mapper.Map<TblTask>(task);
+            mapTask.UserId = Convert.ToInt32(userId);
             var addData = await _adapter.AddAsync(mapTask, cancellationToken);
             var mapView = _mapper.Map<ViewTaskModel>(addData);
             return mapView;
