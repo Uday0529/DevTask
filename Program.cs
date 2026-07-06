@@ -4,8 +4,13 @@ using DevTask2.Business.ServiceInterface;
 using DevTask2.DataAdapters;
 using DevTask2.DataAdapters.DBContext;
 using DevTask2.DataAdapters.IDataAdapter;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 
@@ -32,6 +37,7 @@ builder.Services.AddControllers()
 //services
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 //adapters
 builder.Services.AddScoped<ITaskDataAdapter, TaskDataAdapter>();
@@ -40,8 +46,25 @@ builder.Services.AddScoped<IUserDataAdapter, UserDataAdapter>();
 //mapper
 builder.Services.AddAutoMapper(typeof(DevTask2.Mapping_Repository.Mapper.Mapper));
 
+builder.Services.AddScoped(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
 builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseMySql(connectionString,
 ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["AppSettings:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["AppSettings:Audience"],
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]!)),
+            ValidateIssuerSigningKey = true
+        };
+    });
 
 var app = builder.Build();
 
@@ -53,6 +76,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

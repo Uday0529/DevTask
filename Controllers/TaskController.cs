@@ -1,11 +1,14 @@
 ﻿using DevTask2.Business.ServiceInterface;
 using DevTask2.Models.TaskModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DevTask2.Controllers
 {
-    [Route("api/Task")]
+    [Route("api/tasks")]
     [ApiController]
+    [Authorize(Roles = "User")]
     public class TaskController : ControllerBase
     {
 
@@ -15,36 +18,58 @@ namespace DevTask2.Controllers
             _taskService = taskService;
         }
 
-        [HttpGet("Get/{UserId}")]
-        public Task<IEnumerable<ViewTaskModel>> GetAllTask([FromRoute] string UserId, CancellationToken cancellationToken)
+        private string GetCurrentUserId()
         {
-            return _taskService.GetAllTasks(UserId, cancellationToken);
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
         }
 
-        [HttpGet("Get/{UserId}/{Id}")]
-        public Task<ViewTaskModel> GetTaskById([FromRoute] string Id, [FromRoute] string UserId, CancellationToken cancellationToken)
+        //GET: api/tasks
+        [HttpGet]
+        public Task<IEnumerable<ViewTaskModel>> GetAllTask(CancellationToken cancellationToken)
         {
-            return _taskService.GetTaskById(Id, UserId, cancellationToken);
+            var userId = GetCurrentUserId();
+            return _taskService.GetAllTasks(userId, cancellationToken);
         }
-        [HttpPost("Add/")]
+
+        //GET: api/tasks/{id}
+        [HttpGet("{id}")]
+        public Task<ViewTaskModel> GetTaskById([FromRoute] string id, CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            return _taskService.GetTaskById(id, userId, cancellationToken);
+        }
+
+        //POST: api/tasks
+        [HttpPost]
         public Task<ViewTaskModel> AddTask([FromBody] Add_TaskModel addTask, CancellationToken cancellationToken)
         {
-            return _taskService.AddTask(addTask, cancellationToken);
+            var userId = GetCurrentUserId();
+            return _taskService.AddTask(userId, addTask, cancellationToken);
         }
-        [HttpPut("Update/{Id}/{UserId}")]
-        public Task<bool> UpdateTaskById([FromRoute] string Id, string UserId, [FromBody] Update_TaskModel updateTask, CancellationToken cancellationToken)
+
+        //PUT: api/tasks/{id}
+        [HttpPut("{id}")]
+        public Task<bool> UpdateTaskById([FromRoute] string id, [FromBody] Update_TaskModel updateTask, CancellationToken cancellationToken)
         {
-            return _taskService.UpdateTask(Id, UserId, updateTask, cancellationToken);
+            var userId = GetCurrentUserId();
+            return _taskService.UpdateTask(id, userId, updateTask, cancellationToken);
         }
-        [HttpDelete("Delete/{Id}")]
-        public Task<bool> DeleteTaskById([FromRoute] string Id, CancellationToken cancellationToken)
+
+        //DELETE: api/tasks/{id}
+        [HttpDelete("{id}")]
+        public Task<bool> DeleteTaskById([FromRoute] string id, CancellationToken cancellationToken)
         {
-            return _taskService.DeleteTask(Id, cancellationToken);
+            return _taskService.DeleteTask(id, cancellationToken);
         }
-        [HttpGet("FindByTitle/{UserId}/{Title}")]
-        public Task<ViewTaskModel> GetTaskByTitle([FromRoute] string UserId, string Title, CancellationToken cancellationToken)
+
+        //GET: api/tasks/search?title=...
+        [HttpGet("search")]
+        public async Task<ViewTaskModel> GetTaskByTitle([FromQuery] string title, CancellationToken cancellationToken)
         {
-            return _taskService.GetTaskByTitle(UserId, Title, cancellationToken);
+            var userId = GetCurrentUserId();
+
+            var result = await _taskService.GetTaskByTitle(userId, title, cancellationToken);
+            return result;
         }
     }
 }

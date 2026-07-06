@@ -18,23 +18,38 @@ namespace DevTask2.DataAdapters
             return await _dbcontext.Set<TblUser>().ToListAsync(cancellationToken);
         }
 
-        public async Task<TblUser> GetUserByProperty(string property, string value, CancellationToken cancellationToken)
+        public async Task<TblUser?> GetUserByProperty(string property, string value, CancellationToken cancellationToken)
         {
-
+            if (string.IsNullOrWhiteSpace(value) || string.IsNullOrEmpty(property))
+            {
+                throw new ArgumentException("Invalid value you enter please recheck.");
+            }
             if (property == "Id")
             {
-                return await _dbcontext.Set<TblUser>().Where(t => EF.Property<int>(t, property) == Int32.Parse(value)).FirstOrDefaultAsync(cancellationToken)
-                       ?? throw new KeyNotFoundException(nameof(value));
+                var result = await _dbcontext.Set<TblUser>().Include(t => t.Tasks).Where(t => EF.Property<int>(t, property) == Int32.Parse(value)).FirstOrDefaultAsync(cancellationToken);
+                if (result == null)
+                {
+                    return
+                        null;
+                }
+                else
+                {
+                    return result;
+                }
             }
             if (property == "username")
             {
-                return await _dbcontext.Set<TblUser>().Where(t => EF.Property<string>(t, property) == value).FirstOrDefaultAsync(cancellationToken)
-                    ?? throw new KeyNotFoundException(nameof(value));
+                var result = await _dbcontext.Set<TblUser>().Include(t => t.Tasks).Where(t => EF.Property<string>(t, property) == value).FirstOrDefaultAsync(cancellationToken);
+                if (result == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return result;
+                }
             }
-            else
-            {
-                throw new InvalidOperationException(nameof(property));
-            }
+            return null;
         }
 
 
